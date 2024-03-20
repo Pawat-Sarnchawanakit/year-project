@@ -1,7 +1,10 @@
-from typing import List, Tuple, Any, TypedDict, Self, cast, Generator
+from typing import List, Tuple, Any, TypedDict, Self, cast, Generator, Iterable, Callable, ValuesView
 from pathlib import Path
+from itertools import chain
+from collections import Counter
 from json import load as load_json
 from dataclasses import dataclass
+from statistics import quantiles, mean, stdev
 
 RawInstance = TypedDict("RawInstance", {
     "name": str | None,
@@ -68,6 +71,7 @@ class Instance:
         yield self
         yield from self.descendants()
 
+
 @dataclass
 class DataSource:
     """Stores the entire parsed tree, and the origin of the tree.
@@ -133,3 +137,44 @@ class Database:
 
     def __iter__(self) -> Generator[DataSource, None, None]:
         yield from self.__sources
+
+
+@dataclass
+class Range:
+    """A range with a low value and high value"""
+    low: float | int
+    high: float | int
+
+
+class CompiledData:
+    """A compiled data.
+    """
+    range: Range
+    first_quadrant: float | int
+    median: float | int
+    third_quadrant: float | int
+    stdev: float | int
+    mean: float | int
+    frequency: Counter
+
+    def __init__(self, data_sources: Iterable[DataSource],
+                 filters: Iterable[Callable[[Instance], bool]],
+                 key: Callable[[Instance], Any]) -> None:
+        data: List[Any] = list(
+            map(
+                key,
+                filter(
+                    lambda instance: all(test(instance) for test in filters),
+                    chain(*map(lambda source: source.everything(),
+                               data_sources)))))
+        self.frequency = Counter(data)
+        if not data:
+            return
+        if not isinstance(data[0], int | float):
+            data = cast(List[Any], self.frequency.values())
+        self.mean = mean(data)
+        self.stdev = stdev(data)
+        self.range = Range(low=min(data), high=max(data))
+        if len(data) > 2:
+            quatiles: List[float] = quantiles(data)
+            self.first_quadrant, self.median, self.third_quadrant = quatiles
