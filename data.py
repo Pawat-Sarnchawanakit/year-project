@@ -1,4 +1,4 @@
-from typing import List, Tuple, Any, TypedDict, Self, cast, Generator, Iterable, Callable, ValuesView
+from typing import List, Tuple, Any, TypedDict, Self, cast, Generator, Iterable, Callable
 from pathlib import Path
 from itertools import chain
 from collections import Counter
@@ -177,4 +177,5 @@ class CompiledData:
         self.range = Range(low=min(data), high=max(data))
         if len(data) > 2:
             quatiles: List[float] = quantiles(data)
+            # pylint: disable=unbalanced-tuple-unpacking
             self.first_quadrant, self.median, self.third_quadrant = quatiles
