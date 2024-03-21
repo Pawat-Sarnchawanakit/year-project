@@ -10,8 +10,9 @@ from data import Database, CompiledData
 
 
 class MainForm(customtkinter.CTk):
-    # figure: Figure
+    """The main form of the application."""
     db: Database
+    chart_widget: SimpleChartWidget
 
     def __init__(self) -> None:
         super().__init__()
@@ -19,7 +20,8 @@ class MainForm(customtkinter.CTk):
         self.title("Project")
         self.init_components()
 
-    def load_all_dataset(self):
+    def load_all_dataset(self) -> None:
+        """Loads all data sets into memory."""
         db = Database()
         for file in Path("./dataset/").iterdir():
             if not file.is_file():
@@ -27,7 +29,8 @@ class MainForm(customtkinter.CTk):
             db.add_source(file)
         self.db = db
 
-    def init_components(self):
+    def init_components(self) -> None:
+        """Initialize each componenents."""
         # self.figure = Figure(figsize=(6, 6))
         # graph = nwx.DiGraph()
         # graph.add_nodes_from(set(map(lambda val: val.class_name, chain(*map(lambda source: source.everything(), self.db.sources)))))
@@ -46,7 +49,7 @@ class MainForm(customtkinter.CTk):
         #             stack.append((child, cur[0].class_name))
         # bucket = Counter(map(lambda val: val.class_name, filter(lambda val: not any(map(lambda ancestor: ancestor.class_name == "Model", val.ancestors())), chain(*map(lambda source: source.everything(), db.sources)))))
         # bucket = Counter(map(lambda val: val.class_name, filter(lambda val: sum(1 for _ in val.ancestors()) == 10, chain(*map(lambda source: source.everything(), db.sources)))))
-        compiled_data = CompiledData(self.db.sources, (lambda val: True,), lambda ins: ins.name)
+        compiled_data = CompiledData(self.db.sources, (lambda val: True,), lambda ins: len(ins.name))
         print("Mean name length", compiled_data.mean)
         print("Median name length", compiled_data.median)
         print("Name length SD", compiled_data.stdev)
@@ -58,36 +61,37 @@ class MainForm(customtkinter.CTk):
         # # bucket = Counter(map(lambda val: val.depth(), chain(*db))).items()
         # print(bucket)
         # plt = fig.add_subplot(111)
-        canvas = SimpleChartWidget(self, compiled_data)  # Convert the Figure to a tkinter widget
-        canvas.get_tk_widget().grid(sticky=tk.NSEW)
-        # canvas.draw()
-        self.canvas = canvas
-        chart_type_combobox = customtkinter.CTkComboBox(self, values=("Histogram", "Pie Chart"), command=self.on_chart_type_selected)
         # plt = self.figure.add_subplot(111)
         # layout = nwx.kamada_kawai_layout(graph, scale=2)
         # nwx.draw_networkx_nodes(graph, layout, node_color='steelblue', node_size=300, ax=plt)
         # nwx.draw_networkx_edges(graph, layout, edge_color='gray', ax=plt)
-        self.on_chart_type_selected("Histogram")
+        chart_widget = SimpleChartWidget(self, compiled_data)  # Convert the Figure to a tkinter widget
+        chart_widget.get_tk_widget().grid(sticky=tk.NSEW)
+        chart_widget.options.chart_type = ChartType.HISTOGRAM
+        self.chart_widget = chart_widget
+        chart_type_combobox = customtkinter.CTkComboBox(self, values=ChartType.strings(), command=self.on_chart_type_selected, state="readonly") 
         chart_type_combobox.grid(row=1, column=0, sticky=tk.NSEW)
+        render_button = customtkinter.CTkButton(self, text="Render", command=chart_widget.render)
+        render_button.grid(row=1, column=1, sticky=tk.NSEW)
         self.rowconfigure(0, weight=100)
         self.rowconfigure(1, weight=1)
+        self.columnconfigure(0, weight=10)
         self.columnconfigure(0, weight=1)
 
-    def on_chart_type_selected(self, choice):
-        if choice == "Histogram":
-            return self.canvas.render(ChartType.HISTOGRAM)
-        if choice == "Pie Chart":
-            return self.canvas.render(ChartType.PIE_CHART)
-        # fig = self.figure
-        # fig.clear()
-        # plt = fig.add_subplot(111)
-        # if choice == "Histogram":
-        #     ticks = range(len(self.frequency_data[0]))
-        #     plt.barh(ticks, self.frequency_data[1])
-        #     plt.set_yticks(ticks, self.frequency_data[0])
-        # elif choice == "Pie":
-        #     plt.pie(self.frequency_data[1], labels=self.frequency_data[0])
-        # self.canvas.draw()
+    def on_chart_type_selected(self, choice) -> None:
+        """Fired when the chart type combobox is selected."""
+        self.chart_widget.options.chart_type = ChartType.string_to_enum_map()[choice]
 
-    def show(self):
+    def show(self) -> None:
         self.mainloop()
+
+# class ChartTab(customtkinter.CTkFrame):
+#     chart_type_combobox: customtkinter.CTkComboBox
+
+#     def __init__(self, parent, **kwargs):
+#         super().__init__(parent, **kwargs)
+
+#     def init_components(self):
+#         chart_type_label = customtkinter.CTkLabel(self, text="Chart Type")
+#         self.chart_type_combobox = customtkinter.CTkComboBox(self, values=ChartType.strings()) 
+#         self.chart_type_combobox.grid(row=0, column=0, sticky=tk.NSEW)

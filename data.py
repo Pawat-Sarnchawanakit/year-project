@@ -156,6 +156,7 @@ class CompiledData:
     stdev: float | int
     mean: float | int
     frequency: Counter
+    num_data: List[int | float]
 
     def __init__(self, data_sources: Iterable[DataSource],
                  filters: Iterable[Callable[[Instance], bool]],
@@ -172,6 +173,7 @@ class CompiledData:
             return
         if not isinstance(data[0], int | float):
             data = cast(List[Any], self.frequency.values())
+        self.num_data = data
         self.mean = mean(data)
         self.stdev = stdev(data)
         self.range = Range(low=min(data), high=max(data))
