@@ -158,9 +158,20 @@ class CompiledData:
     frequency: Counter
     num_data: List[int | float]
 
-    def __init__(self, data_sources: Iterable[DataSource],
+    def __init__(self):
+        self.range = 0
+        self.first_quadrant = 0
+        self.median = 0
+        self.third_quadrant = 0
+        self.stdev = 0
+        self.mean = 0
+        self.frequency = Counter()
+        self.num_data = []
+
+    def compile(self, data_sources: Iterable[DataSource],
                  filters: Iterable[Callable[[Instance], bool]],
                  key: Callable[[Instance], Any]) -> None:
+        """Compiles the data."""
         data: List[Any] = list(
             map(
                 key,

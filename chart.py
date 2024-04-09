@@ -1,6 +1,6 @@
-from enum import Enum, auto
+from enum import Enum, auto, member
 from dataclasses import dataclass
-from typing import Tuple, List, Self, Dict
+from typing import Tuple, List, Self, Dict, Any
 from functools import cache
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
@@ -8,13 +8,8 @@ from matplotlib.axes import Axes
 import numpy as np
 from data import CompiledData
 
-
-class ChartType(Enum):
-    """Different types of charts."""
-    HISTOGRAM = auto()
-    PIE_CHART = auto()
-    BOX_PLOT = auto()
-
+class StringEnum(Enum):
+    """Extends Enum."""
     @classmethod
     @cache
     def strings(cls) -> Tuple[str, ...]:
@@ -31,22 +26,42 @@ class ChartType(Enum):
 
     @classmethod
     @cache
-    def string_to_enum_map(cls) -> Dict[str, Self]:
+    def string_to_enum_map(cls) -> Dict[str, Any]:
         """Returns a map that maps a string to an enum.
 
         Returns:
             Dict[str, Self]: The map.
         """
-        dict_map: Dict[str, Self] = {}
+        dict_map: Dict[str, Any] = {}
         for enum in cls:
             dict_map[enum.name.replace("_", " ").title()] = enum
         return dict_map
+
+class ChartKey(StringEnum):
+    """Different types of chart keys."""
+    NAME = member(lambda val: val.name)
+    CLASSNAME = member(lambda val: val.class_name)
+    NAME_LENGTH = member(lambda val: len(val.name))
+    CLASSNAME_LENGTH = member(lambda val: len(val.class_name))
+    NUMBER_OF_CHILDREN = member(lambda val: len(val.children) if val.children is not None else 0)
+    DEPTH = member(lambda val: sum(1 for _ in val.ancestors()))
+
+
+class ChartType(StringEnum):
+    """Different types of charts."""
+    HISTOGRAM = auto()
+    PIE_CHART = auto()
+    BOX_PLOT = auto()
+
 @dataclass
 class SimpleChartWidgetOptions:
     """The options for the simple chart widget."""
     chart_type: ChartType = ChartType.HISTOGRAM
     show_others: bool = False
     show_common_amount: int = 32
+    chart_title: str = ""
+    chart_x_axis_title: str = ""
+    chart_y_axis_title: str = ""
 
 
 class SimpleChartWidget(FigureCanvasTkAgg):
@@ -80,6 +95,9 @@ class SimpleChartWidget(FigureCanvasTkAgg):
         frequency_data = ([val[0]
                            for val in bucket], [val[1] for val in bucket])
         chart_type = self.options.chart_type
+        plt.set_title(self.options.chart_title)
+        plt.set_xlabel(self.options.chart_x_axis_title)
+        plt.set_ylabel(self.options.chart_y_axis_title)
         if chart_type == ChartType.HISTOGRAM:
             ticks = range(len(frequency_data[0]))
             plt.barh(ticks, frequency_data[1])
