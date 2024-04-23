@@ -1,3 +1,4 @@
+"""This file implements data loading, compiling, and transformation."""
 from typing import List, Tuple, Any, TypedDict, Self, cast, Generator, Iterable, Callable
 from pathlib import Path
 from itertools import chain

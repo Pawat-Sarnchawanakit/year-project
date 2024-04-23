@@ -1,3 +1,4 @@
+"""This file implements helper methods for graphs."""
 from typing import Iterable, Callable, Iterator
 import networkx as nwx
 from data import DataSource, Instance

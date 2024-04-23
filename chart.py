@@ -1,11 +1,11 @@
+"""This file implements a simple chart drawing widget."""
 from enum import Enum, auto, member
 from dataclasses import dataclass
-from typing import Tuple, List, Self, Dict, Any
+from typing import Tuple, List, Dict, Any
 from functools import cache
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
-import numpy as np
 from data import CompiledData
 
 class StringEnum(Enum):
