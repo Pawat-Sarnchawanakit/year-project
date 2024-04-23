@@ -169,14 +169,14 @@ class CompiledData:
         self.num_data = []
 
     def compile(self, data_sources: Iterable[DataSource],
-                 filters: Iterable[Callable[[Instance], bool]],
-                 key: Callable[[Instance], Any]) -> None:
+                 key: Callable[[Instance], Any],
+                 test: Callable[[Instance], bool]) -> None:
         """Compiles the data."""
         data: List[Any] = list(
             map(
                 key,
                 filter(
-                    lambda instance: all(test(instance) for test in filters),
+                    test,
                     chain(*map(lambda source: source.everything(),
                                data_sources)))))
         self.frequency = Counter(data)

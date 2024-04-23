@@ -1,28 +1,25 @@
-from itertools import chain
-from typing import Iterable, Tuple, Set, Callable, List, FrozenSet
+from typing import Iterable, Callable, Iterator
 import networkx as nwx
 from data import DataSource, Instance
 
 
-def load_graph(sources: Iterable[DataSource],
+def make_edges(graph: nwx.DiGraph, sources: Iterable[DataSource],
                edge_creation_strategy: Callable) -> None:
-    graph = nwx.DiGraph()
-    graph.add_nodes_from(
-        set(
-            map(lambda val: val.class_name,
-                chain(*map(lambda source: source.everything(), sources)))))
-    stack: List[Tuple[Instance, Instance | None]] = [(source.root, None)
-                                                     for source in sources]
-    edge_set: Set[FrozenSet[Tuple[Instance, Instance]]] = set()
+    """Creates edges."""
+    stack: list[tuple[Instance, Iterator[Instance]]] = [
+        (source.root, iter(source.root.children or ())) for source in sources
+    ]
+    dup = set()
     while stack:
-        cur = stack.pop()
-        u, v = edge_creation_strategy(cur[0], cur[1])
-        if cur[1] is not None:
-            edge = frozenset((u, v))
-            if edge not in edge_set:
-                edge_set.add(edge)
-                graph.add_edge(u, v)
-        if cur[0].children:
-            for child in cur[0].children:
-                stack.append((child, cur[0]))
-    return graph
+        cur = stack[-1]
+        child = next(cur[1], None)
+        if child is None:
+            stack.pop()
+            continue
+        u, v = edge_creation_strategy(cur[0], child)
+        dup_check = (u, v)
+        if dup_check not in dup:
+            dup.add(dup_check)
+            graph.add_edge(u, v)
+        if child.children:
+            stack.append((child, iter(child.children)))
