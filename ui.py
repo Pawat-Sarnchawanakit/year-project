@@ -163,9 +163,16 @@ class GraphTab(customtkinter.CTkFrame):
 
     def render(self, *_):
         """Renders the graph."""
+        graph_type = self.graph_type_combobox.get()
+        if graph_type in ("Name-Name", "ClassName<->Name", "Merged Tree"):
+            if not tk.messagebox.askokcancel(
+                "Warning",
+                "The following operation requires a lot of system memory.\n"
+                "Are you sure you want to continue?"
+                ):
+                return
         self.figure.clear()
         ax = self.figure.add_subplot(111)
-        graph_type = self.graph_type_combobox.get()
         graph = nwx.DiGraph()
         if graph_type == "ClassName-ClassName":
             graph.add_nodes_from(
