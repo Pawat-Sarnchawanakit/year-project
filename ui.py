@@ -14,6 +14,7 @@ import customtkinter
 from chart import SimpleChartWidget, ChartType, ChartKey
 from data import Database, CompiledData
 from graph import make_edges
+import predictor
 
 
 class MainForm(customtkinter.CTk):
@@ -92,21 +93,63 @@ class TreeTab(customtkinter.CTkFrame):
 
     def __init__(self, parent, database, **kwargs) -> None:
         self.db = database
+        self.k_graph, self.table = predictor.initialize(database)
+        style = ttk.Style()
+        style.configure("Treeview.Heading", font=(None, 16))
+        style.configure("Treeview", highlightthickness=0, bd=0, font=(None, 16)) # Modify the font of the body
         super().__init__(parent, **kwargs)
         self.init_components()
 
     def init_components(self) -> None:
         """Initializes the components."""
-        tree = ttk.Treeview(master=self, columns=("name", "class"))
-        tree.heading("name", text="Name")
+        tree = ttk.Treeview(master=self, columns=("class",))
+        tree.heading("#0", text="Name")
         tree.heading("class", text="Predicted ClassName")
         tree.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         self.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         tree.insert(parent='',
                     index=tk.END,
                     iid=0,
-                    text='',
-                    values=("Game", "DataModel"))
+                    text="Game",
+                    values=("DataModel",))
+        tree.bind("<Button-3>", self.popup)
+        popup_menu = tk.Menu(self, tearoff=0)
+        popup_menu.add_command(
+            label="Add",
+            command=self.add_node
+        )
+        popup_menu.add_command(
+            label="Destroy",
+            command=self.remove_node
+        )
+        self.popup_menu = popup_menu
+        self.tree = tree
+
+    def add_node(self):
+        """Add a node."""
+        self.tree.insert(parent=self.tree.selection()[0],
+            index=tk.END,
+            text=tk.simpledialog.askstring("Input Name", "Input the name of the new node: "),
+            values=("!PREDICTME",))
+        predictor.predict_tree(self.k_graph, self.table, self.tree)
+
+    def remove_node(self):
+        """Removes a node."""
+        if any(self.tree.parent(select) == '' for select in self.tree.selection()):
+            tk.messagebox.showerror("Attempt to delete root", "You cannot delete root!")
+            return
+        self.tree.delete(self.tree.selection())
+
+    def popup(self, event):
+        """On right-click."""
+        iid = self.tree.identify_row(event.y)
+        if not iid:
+            return
+        self.tree.selection_set(iid)
+        try:
+            self.popup_menu.tk_popup(event.x_root, event.y_root, 0)
+        finally:
+            self.popup_menu.grab_release()
 
 
 class GraphTab(customtkinter.CTkFrame):
