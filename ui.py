@@ -69,7 +69,7 @@ class MainForm(customtkinter.CTk):
         database = self.load_all_dataset()
         chart_tab = ChartTab(self.loading, tab_view.tab("Chart"), database)
         chart_tab.pack(expand=True, fill=tk.BOTH)
-        storytelling_tab = StoryTellingTab(tab_view.tab("Storytelling"),
+        storytelling_tab = StoryTellingTab(self.loading, tab_view.tab("Storytelling"),
                                            database)
         storytelling_tab.pack(expand=True, fill=tk.BOTH)
         GraphTab(tab_view.tab("Graph"), database)
@@ -261,22 +261,32 @@ class StoryTellingTab(customtkinter.CTkFrame):
     left_desc: customtkinter.CTkComboBox
     right_desc: customtkinter.CTkComboBox
 
-    def __init__(self, parent, database, **kwargs):
+    def __init__(self, loading, parent, database, **kwargs):
         self.db = database
+        self.loading = loading
         super().__init__(parent, **kwargs)
         self.init_components()
 
     def render(self, *_):
         """Render everything."""
+        self.loading(True)
+        self.update()
+        counter = tk.IntVar(value=0)
+        # GIL messing the shit up freezing it anyways, gotta do this dirty shit.
+        def pre_up(counter=counter):
+            val = counter.get()
+            counter.set(counter.get() + 1)
+            if val % 20000 == 0:
+                self.update()
         proc_map = {
             "Name Length":
-            lambda val: len(val.name),
+            lambda val: pre_up() or len(val.name),
             "Class Name Length":
-            lambda val: len(val.class_name),
+            lambda val: pre_up() or len(val.class_name),
             "Depth":
-            lambda val: val.depth(),
+            lambda val: pre_up() or val.depth(),
             "Number of Children":
-            lambda val: len(val.children) if val.children else 0,
+            lambda val: pre_up() or (len(val.children) if val.children else 0),
         }
         left_proc = proc_map[self.left_desc.get()]
         right_proc = proc_map[self.right_desc.get()]
@@ -311,6 +321,7 @@ class StoryTellingTab(customtkinter.CTkFrame):
             f"Standard Deviation: {stdev(right_data)}")
         self.corr_label.configure(
             text=f"Correlation: {correlation(left_data, right_data)}")
+        self.loading(False)
         chart_type = self.chart_combobox.get()
         self.figure.clear()
         ax = self.figure.add_subplot(111)
@@ -361,7 +372,19 @@ class StoryTellingTab(customtkinter.CTkFrame):
             ax.set_ylabel(self.right_desc.get())
             self.chart_widget.draw()
             return
-
+        if chart_type == "Same Name and Class Name Pie Chart":
+            same_name = 0
+            diff_name = 0
+            for v in chain(
+                    *map(lambda source: source.everything(), self.db.sources)):
+                if v.class_name == v.name:
+                    same_name += 1
+                else:
+                    diff_name += 1
+            ax.pie([same_name, diff_name], labels=["Same", "Different"])
+            ax.set_title("Same Name and Class Name Pie Chart")
+            self.chart_widget.draw()
+            return
     def init_components(self):
         """Initialize the widgets."""
         figure = Figure((6, 6))
@@ -377,7 +400,8 @@ class StoryTellingTab(customtkinter.CTkFrame):
             state="readonly",
             command=self.render,
             values=("Depth Class Name Count Stacked Bar Graph",
-                    "Scatter Plot"))
+                    "Scatter Plot",
+                    "Same Name and Class Name Pie Chart"))
         chart_combobox.set("Depth Class Name Count Stacked Bar Graph")
         chart_combobox.grid(column=0, row=1, sticky="ew")
         self.chart_combobox = chart_combobox

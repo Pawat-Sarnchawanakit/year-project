@@ -8,7 +8,7 @@ This application is for predicting class name of a datamodel tree where the name
 |:-----------------|:---------------------|
 | **Storytelling Tab**  | ![Storytelling Tab](./screenshots/story.png) |
 | **Graph Tab**  | ![Graph Tab](./screenshots/graph.png) |
-| **Tree Tab**  | ![Tree Tab(Not finished)](/dev/null) |
+| **Tree Tab**  | ![Tree Tab(Not finished)](./screenshots/tree.png) |
 
 ## Requirements
 
