@@ -22,3 +22,7 @@ Requires Python 3.11.4.  Required Python packages are listed in [requirements.tx
 3. Create a virtualenv: `$ python -m venv .venv`  
 4. Activate the virtualenv and run `$ pip install -r requirements.txt`  
 5. Run the application: `$ python main.py`  
+
+## Tutorial
+[Download](https://drive.google.com/file/d/1_OjJz17QCiNucix_G0piadPKWDzLtgG3/view?usp=sharing "Download")
+[![Tutorial Video](http://img.youtube.com/vi/Bf5rgvpJhC8/0.jpg)](http://www.youtube.com/watch?v=Bf5rgvpJhC8 "Tutorial Video")
