@@ -187,7 +187,7 @@ class CompiledData:
             data = cast(List[Any], self.frequency.values())
         self.num_data = data
         self.mean = mean(data)
-        self.stdev = stdev(data)
+        self.stdev = stdev(data) if len(data) >= 2 else float('nan')
         self.range = Range(low=min(data), high=max(data))
         if len(data) > 2:
             quatiles: List[float] = quantiles(data)
