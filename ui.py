@@ -1,11 +1,13 @@
 """This file implements the UI.
 """
+from typing import Callable
 from pathlib import Path
 from itertools import chain
+from enum import Enum
 from collections import Counter
 from statistics import mean, mode, quantiles, stdev, correlation
 import tkinter as tk
-import tkinter.ttk as ttk
+from tkinter import ttk
 import numpy as np
 import networkx as nwx
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -19,7 +21,6 @@ import predictor
 
 class MainForm(customtkinter.CTk):
     """The main form of the application."""
-    chart_widget: SimpleChartWidget
     loading_overlay: customtkinter.CTkFrame
 
     def __init__(self) -> None:
@@ -34,6 +35,7 @@ class MainForm(customtkinter.CTk):
             if not file.is_file():
                 continue
             db.add_source(file)
+            self.update()
             # break  # Remove when done debugging
         return db
 
@@ -61,26 +63,26 @@ class MainForm(customtkinter.CTk):
         loading_overlay.rowconfigure(0, weight=1, minsize=20)
         loading_overlay.rowconfigure(1, weight=100)
         loading_overlay.columnconfigure("all", weight=1)
-        loading_overlay.grid_forget()
         self.loading_overlay = loading_overlay
         for tab_name in ("Chart", "Storytelling", "Graph", "Tree"):
             tab_view.add(tab_name)
         tab_view.set("Chart")
+        self.after(250, self.delayed_load, tab_view)
+        self.rowconfigure("all", weight=1)
+        self.columnconfigure("all", weight=1)
+
+    def delayed_load(self, tab_view: customtkinter.CTkTabview) -> None:
+        """Delayed load so something shows up first."""
         database = self.load_all_dataset()
         chart_tab = ChartTab(self.loading, tab_view.tab("Chart"), database)
         chart_tab.pack(expand=True, fill=tk.BOTH)
-        storytelling_tab = StoryTellingTab(self.loading, tab_view.tab("Storytelling"),
+        storytelling_tab = StoryTellingTab(self.loading,
+                                           tab_view.tab("Storytelling"),
                                            database)
         storytelling_tab.pack(expand=True, fill=tk.BOTH)
         GraphTab(tab_view.tab("Graph"), database)
         TreeTab(tab_view.tab("Tree"), database)
-        self.rowconfigure("all", weight=1)
-        self.columnconfigure("all", weight=1)
-
-    def on_chart_type_selected(self, choice) -> None:
-        """Fired when the chart type combobox is selected."""
-        self.chart_widget.options.chart_type = ChartType.string_to_enum_map(
-        )[choice]
+        self.loading(False)
 
     def show(self) -> None:
         """Show the form."""
@@ -90,19 +92,27 @@ class MainForm(customtkinter.CTk):
 class TreeTab(customtkinter.CTkFrame):
     """Tree tab
     """
+    db: Database
+    k_graph: predictor.Vertex
+    table: predictor.LTable
+    popup_menu: tk.Menu
+    tree: ttk.Treeview
 
     def __init__(self, parent, database, **kwargs) -> None:
         self.db = database
         self.k_graph, self.table = predictor.initialize(database)
         style = ttk.Style()
         style.configure("Treeview.Heading", font=(None, 16))
-        style.configure("Treeview", highlightthickness=0, bd=0, font=(None, 16)) # Modify the font of the body
+        style.configure("Treeview",
+                        highlightthickness=0,
+                        bd=0,
+                        font=(None, 16))  # Modify the font of the body
         super().__init__(parent, **kwargs)
         self.init_components()
 
     def init_components(self) -> None:
         """Initializes the components."""
-        tree = ttk.Treeview(master=self, columns=("class",))
+        tree = ttk.Treeview(master=self, columns=("class", ))
         tree.heading("#0", text="Name")
         tree.heading("class", text="Predicted ClassName")
         tree.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
@@ -111,32 +121,30 @@ class TreeTab(customtkinter.CTkFrame):
                     index=tk.END,
                     iid=0,
                     text="Game",
-                    values=("DataModel",))
+                    values=("DataModel", ))
         tree.bind("<Button-3>", self.popup)
         popup_menu = tk.Menu(self, tearoff=0)
-        popup_menu.add_command(
-            label="Add",
-            command=self.add_node
-        )
-        popup_menu.add_command(
-            label="Destroy",
-            command=self.remove_node
-        )
+        popup_menu.add_command(label="Add", command=self.add_node)
+        popup_menu.add_command(label="Destroy", command=self.remove_node)
         self.popup_menu = popup_menu
         self.tree = tree
 
     def add_node(self):
         """Add a node."""
         self.tree.insert(parent=self.tree.selection()[0],
-            index=tk.END,
-            text=tk.simpledialog.askstring("Input Name", "Input the name of the new node: "),
-            values=("!PREDICTME",))
+                         index=tk.END,
+                         text=tk.simpledialog.askstring(
+                             "Input Name", "Input the name of the new node: "),
+                         values=("!PREDICTME", ))
         predictor.predict_tree(self.k_graph, self.table, self.tree)
 
     def remove_node(self):
         """Removes a node."""
-        if any(self.tree.parent(select) == '' for select in self.tree.selection()):
-            tk.messagebox.showerror("Attempt to delete root", "You cannot delete root!")
+        if any(
+                self.tree.parent(select) == ''
+                for select in self.tree.selection()):
+            tk.messagebox.showerror("Attempt to delete root",
+                                    "You cannot delete root!")
             return
         self.tree.delete(self.tree.selection())
 
@@ -152,9 +160,21 @@ class TreeTab(customtkinter.CTkFrame):
             self.popup_menu.grab_release()
 
 
+class GraphType(Enum):
+    """Different graph types."""
+    CLASSNAMECLASSNAME = "ClassName-ClassName"
+    NAMENAME = "Name-Name"
+    CLASSNAMENAME = "ClassName<->Name"
+    MERGED = "Merged Tree"
+
+
 class GraphTab(customtkinter.CTkFrame):
     """Graph tab
     """
+    db: Database
+    figure: Figure
+    graph_widget: FigureCanvasTkAgg
+    graph_type_combobox: customtkinter.CTkComboBox
 
     def __init__(self, parent, database, **kwargs):
         self.db = database
@@ -163,18 +183,17 @@ class GraphTab(customtkinter.CTkFrame):
 
     def render(self, *_):
         """Renders the graph."""
-        graph_type = self.graph_type_combobox.get()
-        if graph_type in ("Name-Name", "ClassName<->Name", "Merged Tree"):
+        graph_type = GraphType(self.graph_type_combobox.get())
+        if graph_type != GraphType.CLASSNAMECLASSNAME:
             if not tk.messagebox.askokcancel(
-                "Warning",
-                "The following operation requires a lot of system memory.\n"
-                "Are you sure you want to continue?"
-                ):
+                    "Warning",
+                    "The following operation requires a lot of system memory.\n"
+                    "Are you sure you want to continue?"):
                 return
         self.figure.clear()
         ax = self.figure.add_subplot(111)
         graph = nwx.DiGraph()
-        if graph_type == "ClassName-ClassName":
+        if graph_type == GraphType.CLASSNAMECLASSNAME:
             graph.add_nodes_from(
                 set(
                     map(
@@ -183,7 +202,7 @@ class GraphTab(customtkinter.CTkFrame):
                                    self.db.sources)))))
             make_edges(graph, self.db.sources, lambda u, v:
                        (u.class_name, v.class_name))
-        elif graph_type == "Name-Name":
+        elif graph_type == GraphType.NAMENAME:
             graph.add_nodes_from(
                 set(
                     map(
@@ -191,7 +210,7 @@ class GraphTab(customtkinter.CTkFrame):
                         chain(*map(lambda source: source.everything(),
                                    self.db.sources)))))
             make_edges(graph, self.db.sources, lambda u, v: (u.name, v.name))
-        elif graph_type == "ClassName<->Name":
+        elif graph_type == GraphType.CLASSNAMENAME:
             graph.add_nodes_from(
                 set(
                     map(
@@ -208,7 +227,7 @@ class GraphTab(customtkinter.CTkFrame):
                        (u.class_name, v.name))
             make_edges(graph, self.db.sources, lambda u, v:
                        (u.name, v.class_name))
-        elif graph_type == "Merged Tree":
+        elif graph_type == GraphType.MERGED:
             graph.add_nodes_from(
                 set(
                     map(
@@ -239,8 +258,7 @@ class GraphTab(customtkinter.CTkFrame):
         label.grid(column=0, row=1, sticky="ew")
         graph_type_combobox = customtkinter.CTkComboBox(
             self,
-            values=("ClassName-ClassName", "Name-Name", "ClassName<->Name",
-                    "Merged Tree"),
+            values=[enum.value for enum in GraphType],
             command=self.render)
         graph_type_combobox.set("ClassName-ClassName")
         graph_type_combobox.grid(column=0, row=2, sticky="ew")
@@ -253,13 +271,27 @@ class GraphTab(customtkinter.CTkFrame):
         self.render()
 
 
+class StoryingTellingChartType(Enum):
+    """Different types of chart used in storytelling tab."""
+    STACKED = "Depth Class Name Count Stacked Bar Graph"
+    PIE = "Same Name and Class Name Pie Chart"
+    BOXPLOT = "Box plot of name lengths"
+    SCATTER = "Scatter Plot"
+
+
 class StoryTellingTab(customtkinter.CTkFrame):
     """Story telling tab.
     """
     db: Database
+    loading: Callable
+    figure: Figure
+    chart_widget: FigureCanvasTkAgg
     chart_combobox: customtkinter.CTkComboBox
     left_desc: customtkinter.CTkComboBox
     right_desc: customtkinter.CTkComboBox
+    left_mean_label: customtkinter.CTkLabel
+    right_mean_label: customtkinter.CTkLabel
+    coor_label: customtkinter.CTkLabel
 
     def __init__(self, loading, parent, database, **kwargs):
         self.db = database
@@ -272,12 +304,14 @@ class StoryTellingTab(customtkinter.CTkFrame):
         self.loading(True)
         self.update()
         counter = tk.IntVar(value=0)
+
         # GIL messing the shit up freezing it anyways, gotta do this dirty shit.
         def pre_up(counter=counter):
             val = counter.get()
             counter.set(counter.get() + 1)
             if val % 20000 == 0:
                 self.update()
+
         proc_map = {
             "Name Length":
             lambda val: pre_up() or len(val.name),
@@ -322,10 +356,10 @@ class StoryTellingTab(customtkinter.CTkFrame):
         self.corr_label.configure(
             text=f"Correlation: {correlation(left_data, right_data)}")
         self.loading(False)
-        chart_type = self.chart_combobox.get()
+        chart_type = StoryingTellingChartType(self.chart_combobox.get())
         self.figure.clear()
         ax = self.figure.add_subplot(111)
-        if chart_type == "Depth Class Name Count Stacked Bar Graph":
+        if chart_type == StoryingTellingChartType.STACKED:
             counter = Counter()
             for v in chain(
                     *map(lambda source: source.everything(), self.db.sources)):
@@ -366,13 +400,13 @@ class StoryTellingTab(customtkinter.CTkFrame):
             ax.set_ylabel("Number of Instances")
             self.chart_widget.draw()
             return
-        if chart_type == "Scatter Plot":
+        if chart_type == StoryingTellingChartType.SCATTER:
             ax.scatter(left_data, right_data)
             ax.set_xlabel(self.left_desc.get())
             ax.set_ylabel(self.right_desc.get())
             self.chart_widget.draw()
             return
-        if chart_type == "Same Name and Class Name Pie Chart":
+        if chart_type == StoryingTellingChartType.PIE:
             same_name = 0
             diff_name = 0
             for v in chain(
@@ -385,6 +419,15 @@ class StoryTellingTab(customtkinter.CTkFrame):
             ax.set_title("Same Name and Class Name Pie Chart")
             self.chart_widget.draw()
             return
+        if chart_type == StoryingTellingChartType.BOXPLOT:
+            ax.boxplot([
+                len(v.name) for v in chain(
+                    *map(lambda source: source.everything(), self.db.sources))
+            ])
+            ax.set_title(chart_type.value)
+            self.chart_widget.draw()
+            return
+
     def init_components(self):
         """Initialize the widgets."""
         figure = Figure((6, 6))
@@ -399,9 +442,7 @@ class StoryTellingTab(customtkinter.CTkFrame):
             chart_frame,
             state="readonly",
             command=self.render,
-            values=("Depth Class Name Count Stacked Bar Graph",
-                    "Scatter Plot",
-                    "Same Name and Class Name Pie Chart"))
+            values=[enum.value for enum in StoryingTellingChartType])
         chart_combobox.set("Depth Class Name Count Stacked Bar Graph")
         chart_combobox.grid(column=0, row=1, sticky="ew")
         self.chart_combobox = chart_combobox
@@ -456,6 +497,7 @@ class StoryTellingTab(customtkinter.CTkFrame):
 class ChartTab(customtkinter.CTkFrame):
     """The chart tab."""
     db: Database
+    loading: Callable
     compiled_data: CompiledData
     chart_widget: SimpleChartWidget
     chart_type_combobox: customtkinter.CTkComboBox
@@ -479,12 +521,6 @@ class ChartTab(customtkinter.CTkFrame):
         super().__init__(parent, **kwargs)
         self.compiled_data = CompiledData()
         self.init_components()
-
-    # def compile_data(self, key_type: ChartKey):
-    #     """Compile the data."""
-    #     self.compiled_data = CompiledData(self.db.sources,
-    #                                       (lambda val: True, ),
-    #                                       key_type.value)
 
     def on_chart_type_selected(self, choice) -> None:
         """Fired when the chart type combobox is selected."""

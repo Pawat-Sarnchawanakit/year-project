@@ -4,9 +4,9 @@ from typing import Self, Iterator
 from pathlib import Path
 from dataclasses import dataclass
 from functools import cache
+from tkinter.ttk import Treeview
 from rapidfuzz import fuzz, process
 from data import Database, Instance
-from tkinter.ttk import Treeview
 
 
 @dataclass
@@ -95,7 +95,7 @@ def initialize(db: Database) -> tuple[Vertex, LTable]:
     # load and do the merging and filling the table.
     stack: list[tuple[Iterator, list[Vertex], set]] = []
     for source in db.sources:
-        child = source.root.children
+        child: list[Instance] | None = source.root.children
         if child is None:
             continue
         stack.append((iter(child), root_children, set()))
@@ -167,6 +167,7 @@ def initialize(db: Database) -> tuple[Vertex, LTable]:
 
 
 def predict_tree(k_tree, table, tree_view: Treeview):
+    """Predicts the tree."""
     test_children = tree_view.get_children(tree_view.get_children()[0])
     predicted_name: dict[str, str | bool] = {}
     add_stack: list[Iterator[str]] = [iter(test_children)]

@@ -1,0 +1,165 @@
+<diagram program="umletino" version="15.1"><zoom_level>7</zoom_level><help_text>Space for diagram notes</help_text><element><id>UMLClass</id><coordinates><x>476</x><y>153</y><w>245</w><h>91</h></coordinates><panel_attributes>MainForm
+--
+loading_overlay: customtkinter.CTkFrame
+--
++ load_all_dataset(): Database
++ loading(is_loading: bool): None
++ init_components(): None
++ show(): None
++ delayed_load(tab_view: customtkinter.CTkTabview): None</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>756</x><y>328</y><w>140</w><h>119</h></coordinates><panel_attributes>TreeTab
+--
+db: Database
+k_graph: predictor.Vertex
+table: predictor.LTable
+popup_menu: tk.Menu
+tree: ttk.Treeview
+--
++ init_components(): None
++ add_node(): None
++ remove_node(): None
++ popup(event: tk.Event): None</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>910</x><y>468</y><w>112</w><h>77</h></coordinates><panel_attributes>&lt;&lt;enum&gt;&gt;
+GraphType
+--
+CLASSNAMECLASSNAME
+NAMENAME
+CLASSNAMENAME
+MERGED</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>910</x><y>328</y><w>224</w><h>91</h></coordinates><panel_attributes>GraphTab
+--
+db: Database
+figure: Figure
+graph_widget: FigureCanvasTkAgg
+graph_type_combobox: customtkinter.CTkComboBox
+--
+render(*_): None
+init_components(): None</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>532</x><y>517</y><w>112</w><h>77</h></coordinates><panel_attributes>&lt;&lt;enum&gt;&gt;
+StoryingTellingChartType
+--
+STACKED
+PIE
+BOXPLOT
+SCATTER</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>532</x><y>328</y><w>203</w><h>154</h></coordinates><panel_attributes>StoryTellingTab
+--
+db: Database
+loading: Callable
+figure: Figure
+chart_widget: FigureCanvasTkAgg
+chart_combobox: customtkinter.CTkComboBox
+left_desc: customtkinter.CTkComboBox
+right_desc: customtkinter.CTkComboBox
+left_mean_label: customtkinter.CTkLabel
+right_mean_label: customtkinter.CTkLabel
+coor_label: customtkinter.CTkLabel
+--
+render(*_): None
+init_components): None</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>266</x><y>328</y><w>238</w><h>315</h></coordinates><panel_attributes>ChartTab
+--
+db: Database
+loading: Callable
+compiled_data: CompiledData
+chart_widget: SimpleChartWidget
+chart_type_combobox: customtkinter.CTkComboBox
+show_others_checkbox: customtkinter.CTkCheckBox
+filter_entries_frame: customtkinter.CTkScrollableFrame
+highest_count_string: tk.StringVar
+chart_title_string: tk.StringVar
+chart_x_axis_title_string: tk.StringVar
+chart_y_axis_title_string: tk.StringVar
+filters: set[tk.StringVar]
+key_type: ChartKey
+filtered_sources: set
+data_dirty: bool
+--
++ on_chart_type_selected(choice): None
++ on_highest_count_changed(*_): None
++ on_show_others_changed(): None
++ on_chart_title_changed(*_): None
++ on_chart_x_axis_title_changed(*_): None
++ on_chart_y_axis_title_changed(*_): None
++ on_chart_key_type_selected(choice): None
++ on_filter_source(path, widget): None
++ on_draw(): None
++ pre_up(counter=counter): None
++ on_add_filter(): None
++ value_changed(*_, text=entry_text, widget=entry): None
++ init_components(): None</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>378</x><y>237</y><w>238</w><h>105</h></coordinates><panel_attributes>lt=&lt;-</panel_attributes><additional_attributes>10;130;10;70;320;70;320;10</additional_attributes></element><element><id>Relation</id><coordinates><x>595</x><y>237</y><w>56</w><h>105</h></coordinates><panel_attributes>lt=&lt;-</panel_attributes><additional_attributes>60;130;60;70;10;70;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>595</x><y>237</y><w>245</w><h>105</h></coordinates><panel_attributes>lt=&lt;-</panel_attributes><additional_attributes>330;130;330;70;10;70;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>595</x><y>237</y><w>392</w><h>105</h></coordinates><panel_attributes>lt=&lt;-</panel_attributes><additional_attributes>540;130;540;70;10;70;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>959</x><y>412</y><w>21</w><h>70</h></coordinates><panel_attributes>lt=&lt;-</panel_attributes><additional_attributes>10;80;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>581</x><y>475</y><w>21</w><h>56</h></coordinates><panel_attributes>lt=&lt;-</panel_attributes><additional_attributes>10;60;10;10</additional_attributes></element><element><id>UMLClass</id><coordinates><x>1162</x><y>349</y><w>224</w><h>112</h></coordinates><panel_attributes>Instance
+--
+name: string
+class_name: string
+parent: ?Instance
+children: ?[]Instance
+--
++ depth(): int
++ ancestors(): Generator[Instance, None, None]
++ descendants(): Generator[Instance, None, None]
++ everything(self): Generator[Instance, None, None]</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>1162</x><y>251</y><w>224</w><h>70</h></coordinates><panel_attributes>DataSource
+--
+source_path: Path
+root: Instance
+--
++ everything(self): Generator[Instance, None, None]
++ __iter__(self): Generator[Instance, None, None]</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>1267</x><y>314</y><w>21</w><h>49</h></coordinates><panel_attributes>lt=&lt;-</panel_attributes><additional_attributes>10;50;10;10</additional_attributes></element><element><id>UMLClass</id><coordinates><x>1162</x><y>160</y><w>224</w><h>56</h></coordinates><panel_attributes>Database
+--
+sources: List[DataSource]
+--
++ add_source(path: Path): None
++ __iter__(): Generator[DataSource, None, None]</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>1267</x><y>209</y><w>35</w><h>56</h></coordinates><panel_attributes>lt=&lt;-
+m1=0..n</panel_attributes><additional_attributes>10;60;10;10</additional_attributes></element><element><id>UMLClass</id><coordinates><x>1421</x><y>181</y><w>196</w><h>140</h></coordinates><panel_attributes>CompiledData
+--
+range: Range
+first_quadrant: float | int
+median: float | int
+third_quadrant: float | int
+stdev: float | int
+mean: float | int
+frequency: Counter
+num_data: List[int | float]
+--
++ compile(data_sources: Iterable[DataSource],
+                 key: Callable[[Instance], Any],
+                 test: Callable[[Instance], bool]): None</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>1428</x><y>349</y><w>70</w><h>63</h></coordinates><panel_attributes>&lt;&lt;dataclass&gt;&gt;
+Range
+--
+--
+low: float | int
+high: float | int</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>1456</x><y>314</y><w>21</w><h>49</h></coordinates><panel_attributes>lt=&lt;-</panel_attributes><additional_attributes>10;50;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>1379</x><y>258</y><w>56</w><h>21</h></coordinates><panel_attributes>lt=&lt;..</panel_attributes><additional_attributes>10;10;60;10</additional_attributes></element><element><id>Relation</id><coordinates><x>714</x><y>181</y><w>462</w><h>21</h></coordinates><panel_attributes>lt=&lt;..</panel_attributes><additional_attributes>640;10;10;10</additional_attributes></element><element><id>UMLClass</id><coordinates><x>28</x><y>132</y><w>161</w><h>49</h></coordinates><panel_attributes>StringEnum
+--
+--
++ strings(): Tuple[str, ...]
++ string_to_enum_map(): Dict[str, Any]</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>0</x><y>230</y><w>98</w><h>98</h></coordinates><panel_attributes>&lt;&lt;StringEnum&gt;&gt;
+ChartKey
+--
+NAME
+CLASSNAME
+NAME_LENGTH
+CLASSNAME_LENGTH
+NUMBER_OF_CHILDREN
+DEPTH</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>119</x><y>230</y><w>84</w><h>70</h></coordinates><panel_attributes>&lt;&lt;StringEnum&gt;&gt;
+ChartType
+--
+HISTOGRAM
+PIE_CHART
+BOX_PLOT</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>42</x><y>174</y><w>77</w><h>70</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>90;10;90;50;10;50;10;80</additional_attributes></element><element><id>Relation</id><coordinates><x>98</x><y>174</y><w>77</w><h>70</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>10;10;10;50;90;50;90;80</additional_attributes></element><element><id>UMLClass</id><coordinates><x>56</x><y>370</y><w>119</w><h>98</h></coordinates><panel_attributes>&lt;&lt;dataclass&gt;&gt;
+SimpleChartWidgetOptions
+--
+chart_type: ChartType
+show_others: bool
+show_common_amount: int
+chart_title: string
+chart_x_axis_title: string
+chart_y_axis_title: string</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>42</x><y>503</y><w>154</w><h>77</h></coordinates><panel_attributes>SimpleChartWidget
+--
+figure: Figure
+compiled_data: CompiledData
+options: SimpleChartWidgetOptions
+--
++ render(): None
++ render_internal(plt: Axes): None</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>42</x><y>321</y><w>91</w><h>63</h></coordinates><panel_attributes>lt=&lt;-</panel_attributes><additional_attributes>10;10;10;40;110;40;110;70</additional_attributes></element><element><id>Relation</id><coordinates><x>112</x><y>293</y><w>63</w><h>91</h></coordinates><panel_attributes>lt=&lt;-</panel_attributes><additional_attributes>70;10;70;80;10;80;10;110</additional_attributes></element><element><id>Relation</id><coordinates><x>112</x><y>461</y><w>21</w><h>56</h></coordinates><panel_attributes>lt=&lt;-</panel_attributes><additional_attributes>10;10;10;60</additional_attributes></element><element><id>Relation</id><coordinates><x>7</x><y>321</y><w>273</w><h>301</h></coordinates><panel_attributes>lt=&lt;-</panel_attributes><additional_attributes>10;10;10;410;370;410</additional_attributes></element><element><id>Relation</id><coordinates><x>189</x><y>531</y><w>91</w><h>21</h></coordinates><panel_attributes>lt=&lt;-</panel_attributes><additional_attributes>10;10;110;10</additional_attributes></element><element><id>Relation</id><coordinates><x>294</x><y>83</y><w>1239</w><h>259</h></coordinates><panel_attributes>lt=&lt;-</panel_attributes><additional_attributes>1750;140;1750;10;10;10;10;350</additional_attributes></element><element><id>Relation</id><coordinates><x>336</x><y>111</y><w>952</w><h>231</h></coordinates><panel_attributes>lt=&lt;-</panel_attributes><additional_attributes>1340;70;1340;10;10;10;10;310</additional_attributes></element><element><id>UMLClass</id><coordinates><x>805</x><y>468</y><w>91</w><h>63</h></coordinates><panel_attributes>&lt;&lt;dataclass&gt;&gt;
+Vertex
+--
+name: string
+classname: string
+children: ?list[Vertex]</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>798</x><y>559</y><w>119</w><h>49</h></coordinates><panel_attributes>LTable
+--
+- table: dict[str, str]
+--
++ find(string: string): string</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>840</x><y>440</y><w>21</w><h>42</h></coordinates><panel_attributes>lt=&lt;-</panel_attributes><additional_attributes>10;40;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>777</x><y>440</y><w>91</w><h>133</h></coordinates><panel_attributes>lt=&lt;-</panel_attributes><additional_attributes>110;170;110;150;10;150;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>679</x><y>195</y><w>497</w><h>483</h></coordinates><panel_attributes>lt=&lt;-</panel_attributes><additional_attributes>690;10;670;10;670;670;10;670;10;410</additional_attributes></element><element><id>Relation</id><coordinates><x>1078</x><y>195</y><w>98</w><h>147</h></coordinates><panel_attributes>lt=&lt;-</panel_attributes><additional_attributes>120;10;100;10;100;120;10;120;10;190</additional_attributes></element><element><id>Relation</id><coordinates><x>763</x><y>195</y><w>413</w><h>483</h></coordinates><panel_attributes>lt=&lt;-</panel_attributes><additional_attributes>570;10;550;10;550;670;10;670;10;360</additional_attributes></element></diagram>
