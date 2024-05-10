@@ -189,6 +189,7 @@ class GraphTab(customtkinter.CTkFrame):
                     "Warning",
                     "The following operation requires a lot of system memory.\n"
                     "Are you sure you want to continue?"):
+                self.graph_type_combobox.set(GraphType.CLASSNAMECLASSNAME.value)
                 return
         self.figure.clear()
         ax = self.figure.add_subplot(111)
